@@ -487,13 +487,21 @@ async function fetchFromServer() {
     const challans = await res.json();
     let changed = false;
     challans.forEach(c => {
-      if (!db.challans.find(x => x.id === c.id)) {
+      // Deduplicate by BOTH id and challan number
+      if (!db.challans.find(x => x.id === c.id || x.no === c.no)) {
         c.source = c.source || 'staff';
-        db.challans.unshift(c);
+        db.challans.push(c);
         changed = true;
       }
     });
-    if (changed) { saveDB(); renderChallans(); refreshDashboard(); showToast('📥 New challan received!'); }
+    // Sort by date descending
+    if (changed) {
+      db.challans.sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+      saveDB();
+      renderChallans();
+      refreshDashboard();
+      showToast('📥 New challan received!');
+    }
   } catch(e) { console.log('Server fetch failed', e); }
 }
 setInterval(fetchFromServer, 10000);
@@ -515,6 +523,13 @@ function saveDB() { localStorage.setItem('icb_admin_db', JSON.stringify(db)); }
 function loadDB() {
   const d = localStorage.getItem('icb_admin_db');
   if (d) db = JSON.parse(d);
+  // Deduplicate by challan number — keep first occurrence
+  const seen = new Set();
+  db.challans = db.challans.filter(c => {
+    if (seen.has(c.no)) return false;
+    seen.add(c.no); return true;
+  });
+  saveDB();
 }
 
 // ========== INIT ==========
