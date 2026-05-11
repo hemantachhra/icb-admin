@@ -495,38 +495,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 
 <script>
 // ========== DATA LAYER ==========
-const ADMIN_WA = '919871810055';
-const SERVER = 'https://icb-server.onrender.com';
-
-// Fetch challans from server every 10 seconds
-// Track deleted challan numbers so they never come back
-if(!db.deletedNos) db.deletedNos=[];
-
-async function fetchFromServer() {
-  try {
-    const res = await fetch(SERVER + '/fetch');
-    const challans = await res.json();
-    let changed = false;
-    challans.forEach(c => {
-      // Skip if admin already deleted this challan
-      if(db.deletedNos && db.deletedNos.includes(c.no)) return;
-      // Skip if already exists
-      if(db.challans.find(x => x.no === c.no)) return;
-      c.source = c.source || 'staff';
-      db.challans.unshift(c);
-      changed = true;
-    });
-    if (changed) {
-      db.challans.sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
-      saveDB();
-      renderChallans();
-      refreshDashboard();
-      showToast('📥 New challan received!');
-    }
-  } catch(e) { console.log('Server fetch failed', e); }
-}
-setInterval(fetchFromServer, 10000);
-fetchFromServer();
 let db = {
   challans: [],
   receipts: [],
@@ -534,6 +502,8 @@ let db = {
   cashbook: [],
   deletedNos: [],
 };
+const ADMIN_WA = '919871810055';
+const SERVER = 'https://icb-server.onrender.com';
 let currentChallanId = null;
 let receiptType = 'cash';
 let challanFilter = 'all';
