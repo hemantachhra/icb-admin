@@ -532,6 +532,7 @@ let db = {
   receipts: [],
   journal: [],
   cashbook: [],
+  deletedNos: [],
 };
 let currentChallanId = null;
 let receiptType = 'cash';
@@ -1153,6 +1154,31 @@ function updateClientDatalist() {
 }
 
 // Staff challans now received via server fetch above
+
+// ========== SERVER SYNC ==========
+async function fetchFromServer() {
+  try {
+    const res = await fetch(SERVER + '/fetch');
+    const challans = await res.json();
+    let changed = false;
+    challans.forEach(c => {
+      if(db.deletedNos && db.deletedNos.includes(c.no)) return;
+      if(db.challans.find(x => x.no === c.no)) return;
+      c.source = c.source || 'staff';
+      db.challans.unshift(c);
+      changed = true;
+    });
+    if (changed) {
+      db.challans.sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+      saveDB();
+      renderChallans();
+      refreshDashboard();
+      showToast('📥 New challan received!');
+    }
+  } catch(e) { console.log('Server fetch failed', e); }
+}
+setInterval(fetchFromServer, 10000);
+setTimeout(fetchFromServer, 2000);
 
 // ========== UTILS ==========
 function formatDate(d) {
