@@ -602,7 +602,7 @@ function goPage(name, pushHistory=true) {
   if(name==='challans') renderChallans();
   if(name==='reports') { updateClientDatalist(); const t=new Date().toISOString().split('T')[0]; const f=document.getElementById('rpt-from'); const to=document.getElementById('rpt-to'); if(f&&!f.value)f.value=t; if(to&&!to.value)to.value=t; }
   if(name==='cashbook') { renderCashbook(); const d=document.getElementById('cb-date'); if(d&&!d.value) d.value=new Date().toISOString().split('T')[0]; }
-  if(name==='receipts') renderReceipts();
+  if(name==='receipts') { renderReceipts(); updateClientDatalist(); const d=document.getElementById('rec-date'); if(d&&!d.value) d.value=new Date().toISOString().split('T')[0]; }
   if(name==='journal') renderJournal();
 }
 
